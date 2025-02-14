@@ -86,6 +86,11 @@ fastify.post('/compare', async (request, reply) => {
   }
 });
 
+// Health check
+fastify.get('/', async (request, reply) => {
+  return { message: 'Server is running!' };
+});
+
 // Start server
 const start = async () => {
   try {

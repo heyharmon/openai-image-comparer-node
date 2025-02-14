@@ -1,11 +1,14 @@
 require('dotenv').config();
 const fastify = require('fastify')({ logger: true });
 const multipart = require('@fastify/multipart');
+const FastifyCors = require('@fastify/cors');
 const OpenAI = require('openai');
 const fs = require('fs');
 const util = require('util');
 const path = require('path');
 const pipeline = util.promisify(require('stream').pipeline);
+
+const PORT = process.env.PORT || 8080;
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -14,6 +17,11 @@ const openai = new OpenAI({
 
 // Register multipart plugin for handling file uploads
 fastify.register(multipart);
+fastify.register(FastifyCors, {
+  origin: '*', // Allow all origins. Change this to a specific domain if needed.
+  methods: ['GET', 'POST'], // Specify allowed methods
+  allowedHeaders: ['Content-Type'], // Specify allowed headers
+});
 
 // Serve static files
 fastify.register(require('@fastify/static'), {
@@ -97,14 +105,11 @@ fastify.get('/', async (request, reply) => {
   return { message: 'Server is running!' };
 });
 
-// Start server
-const start = async () => {
-  try {
-    await fastify.listen({ port: 8080 });
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-};
-
-start();
+// Start the Fastify server
+fastify.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
+    if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+    console.log(`Server running at ${address}`);
+});

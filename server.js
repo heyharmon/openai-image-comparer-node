@@ -25,16 +25,24 @@ fastify.register(require('@fastify/static'), {
 fastify.post('/compare', async (request, reply) => {
   try {
     const files = await request.saveRequestFiles();
-    if (files.length !== 2) {
+    
+    // Only count image files
+    const imageFiles = files.filter(f => f.mimetype.startsWith('image/'));
+    if (imageFiles.length !== 2) {
       throw new Error('Please provide exactly two images');
     }
 
     const beforeImage = files.find(f => f.fieldname === 'before');
     const afterImage = files.find(f => f.fieldname === 'after');
+    const promptData = files.find(f => f.fieldname === 'prompt');
+    const promptField = promptData ? promptData.value : null;
 
     if (!beforeImage || !afterImage) {
       throw new Error('Please provide both before and after images');
     }
+
+    // Get custom prompt or use default
+    const customPrompt = promptField || 'Compare these two images and list all the differences between them. Focus on specific, concrete changes.';
 
     // Analyze images with OpenAI Vision
     const response = await openai.chat.completions.create({
@@ -45,7 +53,7 @@ fastify.post('/compare', async (request, reply) => {
           content: [
             { 
               type: "text", 
-              text: "Compare these two images and list all the differences between them. Focus on specific, concrete changes." 
+              text: customPrompt 
             },
             {
               type: "image_url",

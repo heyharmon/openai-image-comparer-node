@@ -18,7 +18,13 @@ fastify.register(multipart);
 // Serve static files
 fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),
-  prefix: '/',
+  prefix: '/ui/',
+  decorateReply: false
+});
+
+// Redirect root to UI
+fastify.get('/ui', async (request, reply) => {
+  return reply.redirect('/ui/');
 });
 
 // Route to handle image comparison
